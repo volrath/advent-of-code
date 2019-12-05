@@ -22,10 +22,11 @@
           (recur (assoc program ri (op (get program p1) (get program p2)))
                  (+ ip 4)))))))
 
-(first
- (intcode-computer (-> program
-                       (assoc 1 12)
-                       (assoc 2 2))))
+(println "Part 1:"
+         (first
+          (intcode-computer (-> program
+                                (assoc 1 12)
+                                (assoc 2 2)))))
 
 
 ;; Part 2
@@ -37,4 +38,4 @@
                                         (assoc 1 noun)
                                         (assoc 2 verb))))
            19690720)
-    (println "Valid" noun verb (+ (* 100 noun) verb))))
+    (println "Part 2: Valid" noun verb (+ (* 100 noun) verb))))

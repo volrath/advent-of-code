@@ -15,7 +15,7 @@
       int
       (- 2)))
 
-(reduce + (map fuel* input))
+(println "Part 1:" (reduce + (map fuel* input)))
 
 
 ;; Part 2
@@ -27,4 +27,4 @@
       (+ fuel-mass (fuel fuel-mass))
       0)))
 
-(reduce + (map fuel input))
+(println "Part 2:" (reduce + (map fuel input)))

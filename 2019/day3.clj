@@ -1,7 +1,7 @@
 #!/usr/bin/env clj
 
 (require '[clojure.string :as string])
-(require '[clojure.math.numeric-tower :as math])
+
 
 (defn parse-input
   [input-str]
@@ -12,6 +12,9 @@
 
 (def lines (parse-input (slurp "input/day3")))
 
+
+;; Part 1
+;; -----------------------------------------------------------------------------
 
 (defn parse-move
   "Parses a line move to a normalized vector.
@@ -79,7 +82,7 @@
 
 (defn manhattan-distance
   [[x y]]
-  (+ (math/abs x) (math/abs y)))
+  (+ (Math/abs x) (Math/abs y)))
 
 
 (comment
@@ -109,7 +112,6 @@
 (comment
   (cross-point [[8 5] [3 5]] [[0 0] [0 7]])
   ;; Result Part 1
-  (solve-part-1 lines)
 
   (solve-part-1 (parse-input "R75,D30,R83,U83,L12,D49,R71,U7,L72
 U62,R66,U55,R34,D71,R55,D58,R83"))
@@ -121,11 +123,15 @@ U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"))
 U7,R6,D4,L4"))
   )
 
+(println "Part 1:" (solve-part-1 lines))
 
+
+;; Part 2
+;; -----------------------------------------------------------------------------
 
 (defn steps-between-segments
   [[[ux uy] [vx vy]]]
-  (math/abs (+ (- ux vx) (- uy vy))))
+  (Math/abs (+ (- ux vx) (- uy vy))))
 
 
 (defn solve-part-2
@@ -150,8 +156,6 @@ U7,R6,D4,L4"))
 
 
 (comment
-  (solve-part-2 lines)
-
   (solve-part-2 (parse-input "R75,D30,R83,U83,L12,D49,R71,U7,L72
 U62,R66,U55,R34,D71,R55,D58,R83"))
 
@@ -161,3 +165,5 @@ U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"))
   (solve-part-2 (parse-input "R8,U5,L5,D3
 U7,R6,D4,L4"))
   )
+
+(println "Part 2:" (solve-part-2 lines))
