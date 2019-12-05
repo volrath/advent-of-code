@@ -1,0 +1,3 @@
+* Advent Of Code
+
+... very lazy attempt to do some of them.
