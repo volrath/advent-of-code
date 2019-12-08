@@ -3,9 +3,7 @@
 (require '[clojure.core.async :as a])
 (require 'intcode)
 
-
 (def program (intcode/parse (slurp "input/day7")))
-
 
 (defn permutations  ;; copied from https://stackoverflow.com/a/26076145
   [s]
@@ -46,7 +44,8 @@
 
 (println "Part 1:" (ffirst (->> (permutations #{0 1 2 3 4})
                                 (map (juxt (partial run-amplifiers program) identity))
-                                (sort-by first >))))
+                                (sort-by first >))  ;; => results for all possible permutations
+                           ))
 
 
 ;; Part 2
