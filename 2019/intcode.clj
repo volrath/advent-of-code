@@ -2,7 +2,12 @@
 
 (require '[clojure.string :as string])
 
-(defn alter-mem
+(defn mem-get
+  [program idx]
+  (get program idx 0))
+
+
+(defn mem-set
   "Automatically extend vector size if `idx` is out of range."
   [program idx new-val]
   (if (> (count program) idx)
@@ -13,14 +18,14 @@
 (defn binary-op [op-fn]
   (fn [state x y rp]
     (-> state
-        (update :program alter-mem rp (op-fn x y))
+        (update :program mem-set rp (op-fn x y))
         (update :ip + 4))))
 
 
 (defn input-op [input-fn]
   (fn [state rp]
     (-> state
-        (update :program alter-mem rp (input-fn))
+        (update :program mem-set rp (input-fn))
         (update :ip + 2))))
 
 
@@ -43,9 +48,9 @@
   (fn [state x y rp]
     (-> state
         (update :ip + 4)
-        (update :program alter-mem rp (if (comp-fn x y)
-                                        1
-                                        0)))))
+        (update :program mem-set rp (if (comp-fn x y)
+                                      1
+                                      0)))))
 
 
 (defn rebase-op [state nb]
@@ -81,14 +86,11 @@
                  params              (map (fn [param-pos param-val]
                                             (let [param-desc (get params-desc param-pos)
                                                   param-mode (get params-modes param-pos :pos)]
-                                              (if (= param-desc :not-eval)
-                                                (if (= param-mode :rel)
-                                                  (+ rel-base param-val)
-                                                  param-val)
-                                                (case param-mode
-                                                  :pos (get program param-val 0)
-                                                  :rel (get program (+ rel-base param-val) 0)
-                                                  :imm param-val))))
+                                              (cond->> param-val
+                                                (= param-mode :rel)
+                                                (+ rel-base)
+                                                (and (not= param-mode :imm) (= param-desc :eval))
+                                                (mem-get program))))
                                           (range (count raw-params))
                                           raw-params)]
              (recur (apply op-fn state params)))))))))
