@@ -20,7 +20,9 @@
 (defn output-op [output-fn]
   (fn [state x]
     (output-fn x)
-    (update state :ip + 2)))
+    (-> state
+        (update :ip + 2)
+        (update :output conj x))))
 
 
 (defn jump-op [cond-fn]
@@ -56,7 +58,8 @@
             {:program program
              :ip      0}]
        (let [opcode (get program ip)]
-         (when-not (or (nil? opcode) (= opcode 99))
+         (if (or (nil? opcode) (= opcode 99))
+           (:output state)
            (let [[op-fn params-desc] (op-specs (mod opcode 10))
                  raw-params          (subvec program (inc ip) (+ 1 ip (count params-desc)))
                  params-modes        (->> opcode str reverse (drop 2) (map {\0 :pos \1 :imm}) vec)
@@ -74,18 +77,3 @@
   [program-string]
   (mapv #(Integer/parseInt (string/trim-newline %))
         (string/split program-string #",")))
-
-
-(comment
-  (let [output (volatile! [])]
-    (computer (parse "3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99")
-              {:input-fn (constantly 8)
-               :output-fn #(vswap! output conj %)})
-    @output)
-
-  (let [output (volatile! [])]
-    (computer (parse (slurp "input/day5"))
-              {:input-fn (constantly 5)
-               :output-fn #(vswap! output conj %)})
-    @output)
-  )
