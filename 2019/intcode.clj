@@ -2,18 +2,25 @@
 
 (require '[clojure.string :as string])
 
+(defn alter-mem
+  "Automatically extend vector size if `idx` is out of range."
+  [program idx new-val]
+  (if (> (count program) idx)
+    (assoc program idx new-val)
+    (vec (concat program (repeat (- idx (count program)) 0) [new-val]))))
+
 
 (defn binary-op [op-fn]
   (fn [state x y rp]
     (-> state
-        (assoc-in [:program rp] (op-fn x y))
+        (update :program alter-mem rp (op-fn x y))
         (update :ip + 4))))
 
 
 (defn input-op [input-fn]
   (fn [state rp]
     (-> state
-        (assoc-in [:program rp] (input-fn))
+        (update :program alter-mem rp (input-fn))
         (update :ip + 2))))
 
 
@@ -36,9 +43,15 @@
   (fn [state x y rp]
     (-> state
         (update :ip + 4)
-        (assoc-in [:program rp] (if (comp-fn x y)
-                                  1
-                                  0)))))
+        (update :program alter-mem rp (if (comp-fn x y)
+                                        1
+                                        0)))))
+
+
+(defn rebase-op [state nb]
+  (-> state
+      (update :ip + 2)
+      (update :rel-base + nb)))
 
 
 (defn computer
@@ -53,27 +66,35 @@
                    5 [(jump-op (comp not zero?)) [:eval :eval]]
                    6 [(jump-op zero?) [:eval :eval]]
                    7 [(comp-op <) [:eval :eval :not-eval]]
-                   8 [(comp-op =) [:eval :eval :not-eval]]}]
-     (loop [{:keys [program ip] :as state}
-            {:program program
-             :ip      0}]
+                   8 [(comp-op =) [:eval :eval :not-eval]]
+                   9 [rebase-op [:eval]]}]
+     (loop [{:keys [program ip rel-base] :as state}
+            {:program  program
+             :ip       0
+             :rel-base 0}]
        (let [opcode (get program ip)]
          (if (or (nil? opcode) (= opcode 99))
            (:output state)
            (let [[op-fn params-desc] (op-specs (mod opcode 10))
                  raw-params          (subvec program (inc ip) (+ 1 ip (count params-desc)))
-                 params-modes        (->> opcode str reverse (drop 2) (map {\0 :pos \1 :imm}) vec)
+                 params-modes        (->> opcode str reverse (drop 2) (map {\0 :pos \1 :imm \2 :rel}) vec)
                  params              (map (fn [param-pos param-val]
-                                            (if (and (= (get params-desc param-pos) :eval)
-                                                     (= (get params-modes param-pos :pos) :pos))
-                                              (get program param-val)
-                                              param-val))
-                                          (range)
+                                            (let [param-desc (get params-desc param-pos)
+                                                  param-mode (get params-modes param-pos :pos)]
+                                              (if (= param-desc :not-eval)
+                                                (if (= param-mode :rel)
+                                                  (+ rel-base param-val)
+                                                  param-val)
+                                                (case param-mode
+                                                  :pos (get program param-val 0)
+                                                  :rel (get program (+ rel-base param-val) 0)
+                                                  :imm param-val))))
+                                          (range (count raw-params))
                                           raw-params)]
              (recur (apply op-fn state params)))))))))
 
 
 (defn parse
   [program-string]
-  (mapv #(Integer/parseInt (string/trim-newline %))
-        (string/split program-string #",")))
+  (mapv #(Long/parseLong %)
+        (string/split (string/trim program-string) #",")))
