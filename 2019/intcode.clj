@@ -1,6 +1,6 @@
-(ns intcode)
+(ns intcode
+  (:require [clojure.string :as string]))
 
-(require '[clojure.string :as string])
 
 (defn mem-get
   [program idx]
